@@ -1,0 +1,50 @@
+2025-06-12 14:01:32,918 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-06-12 14:01:32,918 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-12 14:01:32,919 - INFO -  * Restarting with stat
+2025-06-12 14:01:33,263 - WARNING -  * Debugger is active!
+2025-06-12 14:01:33,265 - INFO -  * Debugger PIN: 253-980-199
+2025-06-12 14:01:44,463 - DEBUG - Получен запрос на маршрут /
+2025-06-12 14:01:44,469 - INFO - 127.0.0.1 - - [12/Jun/2025 14:01:44] "GET / HTTP/1.1" 200 -
+2025-06-12 14:01:47,340 - DEBUG - Получен запрос на маршрут /
+2025-06-12 14:01:47,341 - DEBUG - Получены данные формы: target_url=https://bookmaxicabmelbourne.com.au/, tests=['check_site', 'scan_ports', 'scan_paths', 'check_cms', 'sql_injection', 'admin_login']
+2025-06-12 14:01:47,341 - INFO - Сканирование URL: https://bookmaxicabmelbourne.com.au/ с тестами: ['check_site', 'scan_ports', 'scan_paths', 'check_cms', 'sql_injection', 'admin_login']
+2025-06-12 14:01:47,341 - DEBUG - Извлечен hostname: bookmaxicabmelbourne.com.au
+2025-06-12 14:01:47,341 - DEBUG - Извлечен hostname: bookmaxicabmelbourne.com.au
+2025-06-12 14:01:47,343 - DEBUG - Извлечен hostname: bookmaxicabmelbourne.com.au
+2025-06-12 14:01:47,343 - INFO - IP-адрес для bookmaxicabmelbourne.com.au: 162.241.87.86
+2025-06-12 14:01:47,344 - DEBUG - Starting new HTTPS connection (1): bookmaxicabmelbourne.com.au:443
+2025-06-12 14:01:47,943 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET / HTTP/1.1" 200 None
+2025-06-12 14:01:48,136 - INFO - Статус сайта https://bookmaxicabmelbourne.com.au: 200
+2025-06-12 14:01:48,136 - DEBUG - Извлечен hostname: bookmaxicabmelbourne.com.au
+2025-06-12 14:01:48,136 - DEBUG - Извлечен hostname: bookmaxicabmelbourne.com.au
+2025-06-12 14:01:48,328 - DEBUG - Извлечен hostname: bookmaxicabmelbourne.com.au
+2025-06-12 14:01:48,328 - DEBUG - Извлечен hostname: bookmaxicabmelbourne.com.au
+2025-06-12 14:01:48,328 - INFO - Порт 443 открыт на bookmaxicabmelbourne.com.au
+2025-06-12 14:01:48,328 - INFO - Порт 80 открыт на bookmaxicabmelbourne.com.au
+2025-06-12 14:01:48,328 - DEBUG - Результаты сканирования портов: ['Сканирование портов...', 'Порт 443 открыт', 'Порт 80 открыт', 'Открытые порты: [443, 80]']
+2025-06-12 14:01:48,329 - DEBUG - Starting new HTTPS connection (1): bookmaxicabmelbourne.com.au:443
+2025-06-12 14:01:48,890 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /admin HTTP/1.1" 301 250
+2025-06-12 14:01:49,108 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /admin/ HTTP/1.1" 200 966
+2025-06-12 14:01:49,108 - INFO - Обнаружен путь: https://bookmaxicabmelbourne.com.au/admin
+2025-06-12 14:01:49,109 - DEBUG - Starting new HTTPS connection (1): bookmaxicabmelbourne.com.au:443
+2025-06-12 14:01:49,691 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /login HTTP/1.1" 302 227
+2025-06-12 14:01:49,889 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /404.php HTTP/1.1" 200 12650
+2025-06-12 14:01:49,889 - INFO - Обнаружен путь: https://bookmaxicabmelbourne.com.au/login
+2025-06-12 14:01:49,890 - DEBUG - Результаты сканирования путей: ['Поиск популярных путей...', 'Обнаружен путь: https://bookmaxicabmelbourne.com.au/admin', 'Обнаружен путь: https://bookmaxicabmelbourne.com.au/login']
+2025-06-12 14:01:49,890 - DEBUG - Starting new HTTPS connection (1): bookmaxicabmelbourne.com.au:443
+2025-06-12 14:01:50,468 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /wp-login.php HTTP/1.1" 404 36
+2025-06-12 14:01:50,469 - DEBUG - Starting new HTTPS connection (1): bookmaxicabmelbourne.com.au:443
+2025-06-12 14:01:51,050 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /administrator/ HTTP/1.1" 302 227
+2025-06-12 14:01:51,250 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /404.php HTTP/1.1" 200 12650
+2025-06-12 14:01:51,251 - INFO - Обнаружена CMS Joomla по пути https://bookmaxicabmelbourne.com.au/administrator/
+2025-06-12 14:01:51,251 - DEBUG - Результаты проверки CMS: ['Проверка CMS...', 'Обнаружена CMS: Joomla по пути https://bookmaxicabmelbourne.com.au/administrator/']
+2025-06-12 14:01:51,252 - DEBUG - Starting new HTTPS connection (1): bookmaxicabmelbourne.com.au:443
+2025-06-12 14:01:51,839 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /search.php?q='%20OR%20'1'='1 HTTP/1.1" 404 36
+2025-06-12 14:01:51,840 - DEBUG - Результаты проверки SQL-инъекций: ['Проверка на SQL-инъекции...', "Нет признаков SQL Injection по адресу: https://bookmaxicabmelbourne.com.au/search.php?q=' OR '1'='1"]
+2025-06-12 14:01:51,840 - DEBUG - Starting new HTTPS connection (1): bookmaxicabmelbourne.com.au:443
+2025-06-12 14:01:52,442 - DEBUG - https://bookmaxicabmelbourne.com.au:443 "GET /admin/ HTTP/1.1" 200 966
+2025-06-12 14:01:52,442 - INFO - Возможен доступ к админке по адресу: https://bookmaxicabmelbourne.com.au/admin/
+2025-06-12 14:01:52,442 - DEBUG - Результаты проверки админ-панелей: ['Проверка админ-панелей...', 'Возможен доступ к админке по адресу: https://bookmaxicabmelbourne.com.au/admin/']
+2025-06-12 14:01:52,442 - DEBUG - Результаты сканирования: ['Статус сайта: 200', 'Сканирование портов...', 'Порт 443 открыт', 'Порт 80 открыт', 'Открытые порты: [443, 80]', 'Поиск популярных путей...', 'Обнаружен путь: https://bookmaxicabmelbourne.com.au/admin', 'Обнаружен путь: https://bookmaxicabmelbourne.com.au/login', 'Проверка CMS...', 'Обнаружена CMS: Joomla по пути https://bookmaxicabmelbourne.com.au/administrator/', 'Проверка на SQL-инъекции...', "Нет признаков SQL Injection по адресу: https://bookmaxicabmelbourne.com.au/search.php?q=' OR '1'='1", 'Проверка админ-панелей...', 'Возможен доступ к админке по адресу: https://bookmaxicabmelbourne.com.au/admin/']
+2025-06-12 14:01:52,445 - INFO - 127.0.0.1 - - [12/Jun/2025 14:01:52] "POST / HTTP/1.1" 200 -

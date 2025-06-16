@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deaclouds</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+  <div class="container mx-auto px-4 py-6 max-w-4xl">
+    <!-- Site Title -->
+    <header class="text-center mb-6">
+      <h1 class="text-4xl font-bold text-blue-400">Deaclouds</h1>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gray-800 p-4 rounded-lg shadow">
+      {% if session.username %}
+        <div class="flex flex-wrap gap-4 mb-4 sm:mb-0">
+          <a href="/" class="text-blue-400 hover:underline">Главная</a>
+          <a href="/chat" class="text-blue-400 hover:underline">Чат</a>
+          <a href="/data" class="text-blue-400 hover:underline">Посты</a>
+          <a href="/news" class="text-blue-400 hover:underline">Новостник</a>
+          {% if session.role=='owner' %}
+            <a href="/admin" class="text-blue-400 hover:underline">Админка</a>
+          {% endif %}
+        </div>
+        <a href="/logout" class="text-red-400 hover:underline">Выйти ({{ session.username }})</a>
+      {% else %}
+        <div class="flex gap-4">
+          <a href="/auth/login" class="text-blue-400 hover:underline">Вход</a>
+          <a href="/auth/register" class="text-blue-400 hover:underline">Регистрация</a>
+        </div>
+      {% endif %}
+    </nav>
+
+    <!-- Main Content -->
+    <main class="bg-gray-800 p-6 rounded-lg shadow">
+      {% if page=='home' %}
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Добро пожаловать, {{ session.username }}!</h1>
+
+      {% elif page=='login' %}
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Вход</h1>
+        <form method="POST" class="flex flex-col gap-4 max-w-md">
+          <input type="text" name="username" placeholder="Имя пользователя" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+          <input type="password" name="password" placeholder="Пароль" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+          <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Войти</button>
+        </form>
+
+      {% elif page=='register' %}
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Регистрация</h1>
+        <form method="POST" class="flex flex-col gap-4 max-w-md">
+          <input type="text" name="username" placeholder="Имя пользователя" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+          <input type="email" name="email" placeholder="Email" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+          <input type="password" name="password" placeholder="Пароль" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+          <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Зарегистрироваться</button>
+        </form>
+
+      {% elif page=='chat' %}
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Чат</h1>
+        <form method="POST" class="flex flex-col sm:flex-row gap-4 mb-6">
+          <input type="text" name="content" placeholder="Сообщение" class="flex-grow p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+          <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Отправить</button>
+        </form>
+        <div class="space-y-4">
+          {% for m in chat %}
+            <div class="border border-gray-600 p-4 rounded bg-gray-700">
+              <p class="font-semibold text-gray-100">{{ m.username }}: {{ m.content }}</p>
+              <p class="text-sm text-gray-400">{{ m.created_at }}</p>
+            </div>
+          {% endfor %}
+        </div>
+
+      {% elif page=='data' %}
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Посты</h1>
+        <form method="POST" class="flex flex-col gap-4 mb-6 max-w-md">
+          <input type="text" name="title" placeholder="Заголовок" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+          <input type="text" name="tag" placeholder="Тег" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+          <textarea name="content" placeholder="Содержание" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required></textarea>
+          <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Создать</button>
+        </form>
+        <div class="space-y-4">
+          {% for post in data %}
+            <div class="border border-gray-600 p-4 rounded bg-gray-700">
+              <h2 class="text-xl font-semibold text-gray-100">{{ post.title }} [{{ post.tag }}]</h2>
+              <p>{{ post.content }}</p>
+              <p class="text-sm text-gray-400">{{ post.created_at }}</p>
+            </div>
+          {% endfor %}
+        </div>
+
+      {% elif page=='news' %}
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Новостник</h1>
+        <p class="text-gray-400 mb-4">Ваша роль: {{ role }}</p>
+        {% if role == 'owner' %}
+          <form method="POST" class="flex flex-col gap-4 mb-6 max-w-md">
+            <input type="text" name="title" placeholder="Заголовок новости" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
+            <textarea name="body" placeholder="Текст новости" rows="5" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required></textarea>
+            <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Опубликовать новость</button>
+          </form>
+        {% else %}
+          <p class="text-red-400 mb-6">Только пользователи с ролью 'owner' могут публиковать новости.</p>
+        {% endif %}
+        <div class="space-y-4">
+          {% for item in news %}
+            <div class="border border-gray-600 p-4 rounded bg-gray-700">
+              <h2 class="text-xl font-semibold text-gray-100">{{ item.title }} ({{ item.created_at }}, {{ item.username }})</h2>
+              <p>{{ item.body }}</p>
+            </div>
+          {% endfor %}
+        </div>
+
+      {% elif page=='profile' %}
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Профиль: {{ profile.username }}</h1>
+        <p><strong>Email:</strong> {% if session.role=='owner' or session.username==profile.username %}{{ profile.email }}{% else %}скрыт{% endif %}</p>
+        <p><strong>Роль:</strong> [{{ profile.role }}]</p>
+        {% if session.role=='owner' and session.username!=profile.username %}
+          <div class="flex flex-col sm:flex-row gap-4 mt-4">
+            <form method="POST" action="/grant/{{ profile.username }}?role=moder">
+              <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Сделать модератором</button>
+            </form>
+            <form method="POST" action="/grant/{{ profile.username }}?role=owner">
+              <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Сделать владельцем</button>
+            </form>
+            <form method="POST" action="/revoke/{{ profile.username }}">
+              <button type="submit" class="bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600">Снять права</button>
+            </form>
+            <form method="POST" action="/ban/{{ profile.username }}">
+              <button type="submit" class="bg-red-500 text-white p-2 rounded hover:bg-red-600">Забанить</button>
+            </form>
+          </div>
+        {% endif %}
+
+      {% elif page=='admin' %}
+        <h1 class="text-2xl font-bold mb-4 text-gray-100">Админка</h1>
+        <div class="space-y-4">
+          {% for u in users %}
+            <div class="border border-gray-600 p-4 rounded bg-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <p>{{ u.username }} [{{ u.role }}]</p>
+              {% if u.username!=session.username %}
+                <div class="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
+                  <a href="/grant/{{ u.username }}?role=moder" class="text-green-400 hover:underline">Модер</a>
+                  <a href="/grant/{{ u.username }}?role=owner" class="text-green-400 hover:underline">Владелец</a>
+                  <a href="/revoke/{{ u.username }}" class="text-yellow-400 hover:underline">Снять</a>
+                  <a href="/ban/{{ u.username }}" class="text-red-400 hover:underline">Бан</a>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </main>
+
+    <!-- Users List -->
+    {% if session.username %}
+      <aside class="mt-6 bg-gray-800 p-4 rounded-lg shadow">
+        <h2 class="text-xl font-bold mb-4 text-gray-100">Пользователи</h2>
+        <div class="space-y-2">
+          {% for u in users %}
+            <a href="/profile/{{ u.username }}" class="block text-blue-400 hover:underline">{{ u.username }} [{{ u.role }}]</a>
+          {% endfor %}
+        </div>
+      </aside>
+    {% endif %}
+  </div>
+</body>
+</html>

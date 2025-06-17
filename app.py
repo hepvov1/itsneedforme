@@ -1,232 +1,179 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, g, abort
 import sqlite3, os
-from datetime import datetime
-import logging
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'
+app.secret_key = 'secret'
+DB_NAME = 'deadclouds.db'
 
-DB_PATH = 'forum.db'
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB_NAME)
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-
-# Ensure DB exists
-def init_db():
-    with sqlite3.connect(DB_PATH) as con:
-        cur = con.cursor()
-        cur.execute('''CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            email TEXT,
-            password TEXT,
-            role TEXT DEFAULT 'user'
-        )''')
-        cur.execute('''CREATE TABLE IF NOT EXISTS posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            tag TEXT,
-            content TEXT,
-            created_at TEXT,
-            username TEXT
-        )''')
-        cur.execute('''CREATE TABLE IF NOT EXISTS chat (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT,
-            created_at TEXT,
-            username TEXT
-        )''')
-        cur.execute('''CREATE TABLE IF NOT EXISTS news (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            body TEXT,
-            created_at TEXT,
-            username TEXT
-        )''')
-        con.commit()
-
-
-init_db()
-
-
-# Helper functions
-def get_user(username):
-    with sqlite3.connect(DB_PATH) as con:
-        cur = con.cursor()
-        cur.execute("SELECT * FROM users WHERE username=?", (username,))
-        row = cur.fetchone()
-        if row:
-            return dict(id=row[0], username=row[1], email=row[2], password=row[3], role=row[4])
-        return None
-
-
-def get_all_users():
-    with sqlite3.connect(DB_PATH) as con:
-        cur = con.cursor()
-        cur.execute("SELECT username, role FROM users")
-        return [dict(username=r[0], role=r[1]) for r in cur.fetchall()]
-
+@app.teardown_appcontext
+def close_db(exception):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 @app.route('/')
 def home():
-    if 'username' not in session:
-        return redirect('/auth/login')
-    users = get_all_users()
-    return render_template('index.html', page='home', users=users)
-
+    return render_template('index.html', page='home', users=get_users())
 
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
-    if 'username' not in session:
-        return redirect('/auth/login')
+    db = get_db()
     if request.method == 'POST':
-        content = request.form['content']
-        with sqlite3.connect(DB_PATH) as con:
-            con.execute("INSERT INTO chat (content, created_at, username) VALUES (?, ?, ?)",
-                        (content, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), session['username']))
-    with sqlite3.connect(DB_PATH) as con:
-        cur = con.cursor()
-        cur.execute("SELECT id, content, created_at, username FROM chat ORDER BY id DESC LIMIT 50")
-        chat = [dict(id=r[0], content=r[1], created_at=r[2], username=r[3]) for r in cur.fetchall()]
-    users = get_all_users()
-    return render_template('index.html', page='chat', chat=chat, users=users)
-
+        db.execute('INSERT INTO chat (username, content) VALUES (?, ?)', (session['username'], request.form['content']))
+        db.commit()
+    chat = db.execute('SELECT username, content, created_at FROM chat ORDER BY id DESC').fetchall()
+    return render_template('index.html', page='chat', chat=chat, users=get_users())
 
 @app.route('/data', methods=['GET', 'POST'])
 def data():
-    if 'username' not in session:
-        return redirect('/auth/login')
+    db = get_db()
     if request.method == 'POST':
-        title = request.form['title']
-        tag = request.form['tag']
-        content = request.form['content']
-        with sqlite3.connect(DB_PATH) as con:
-            con.execute("INSERT INTO posts (title, tag, content, created_at, username) VALUES (?, ?, ?, ?, ?)",
-                        (title, tag, content, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), session['username']))
-    with sqlite3.connect(DB_PATH) as con:
-        cur = con.cursor()
-        cur.execute("SELECT title, tag, content, created_at FROM posts ORDER BY id DESC")
-        data = [dict(title=r[0], tag=r[1], content=r[2], created_at=r[3]) for r in cur.fetchall()]
-    users = get_all_users()
-    return render_template('index.html', page='data', data=data, users=users)
-
+        db.execute('INSERT INTO data (title, tag, content, username) VALUES (?, ?, ?, ?)', (request.form['title'], request.form['tag'], request.form['content'], session['username']))
+        db.commit()
+    data = db.execute('SELECT id, title, tag, content, created_at, username FROM data ORDER BY id DESC').fetchall()
+    return render_template('index.html', page='data', data=data, users=get_users())
 
 @app.route('/news', methods=['GET', 'POST'])
 def news():
-    if 'username' not in session:
-        return redirect('/auth/login')
-    # Re-validate role from database to handle session inconsistencies
-    user = get_user(session['username'])
-    if user:
-        session['role'] = user['role']
-        logger.debug(f"Re-validated user: {session['username']}, Role: {session['role']}")
-    else:
-        logger.error(f"User {session['username']} not found in database")
-        session.clear()
-        return redirect('/auth/login')
-
-    logger.debug(f"User: {session.get('username')}, Role: {session.get('role')}")
+    db = get_db()
     if request.method == 'POST' and session.get('role') == 'owner':
-        title = request.form['title']
-        body = request.form['body']
-        logger.debug(f"Posting news: {title} by {session['username']}")
-        with sqlite3.connect(DB_PATH) as con:
-            con.execute("INSERT INTO news (title, body, created_at, username) VALUES (?, ?, ?, ?)",
-                        (title, body, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), session['username']))
-        return redirect('/news')
-    with sqlite3.connect(DB_PATH) as con:
-        cur = con.cursor()
-        cur.execute("SELECT title, body, created_at, username FROM news ORDER BY id DESC")
-        news = [dict(title=r[0], body=r[1], created_at=r[2], username=r[3]) for r in cur.fetchall()]
-    users = get_all_users()
-    return render_template('index.html', page='news', news=news, users=users, role=session.get('role'))
+        db.execute('INSERT INTO news (title, body, username) VALUES (?, ?, ?)', (request.form['title'], request.form['body'], session['username']))
+        db.commit()
+    news = db.execute('SELECT title, body, username, created_at FROM news ORDER BY id DESC').fetchall()
+    return render_template('index.html', page='news', news=news, users=get_users())
 
+@app.route('/admin')
+def admin():
+    if session.get('role') != 'owner': return redirect('/')
+    return render_template('index.html', page='admin', users=get_users())
 
-@app.route('/auth/login', methods=['GET', 'POST'])
+@app.route('/grant/<username>', methods=['POST'])
+def grant(username):
+    if session.get('role') != 'owner': return redirect('/')
+    role = request.args.get('role')
+    db = get_db()
+    db.execute('UPDATE users SET role = ? WHERE username = ?', (role, username))
+    db.commit()
+    return redirect('/admin')
+
+@app.route('/revoke/<username>', methods=['POST'])
+def revoke(username):
+    if session.get('role') != 'owner': return redirect('/')
+    db = get_db()
+    db.execute('UPDATE users SET role = "user" WHERE username = ?', (username,))
+    db.commit()
+    return redirect('/admin')
+
+@app.route('/ban/<username>', methods=['POST'])
+def ban(username):
+    if session.get('role') != 'owner': return redirect('/')
+    db = get_db()
+    db.execute('DELETE FROM users WHERE username = ?', (username,))
+    db.commit()
+    return redirect('/admin')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = get_user(username)
-        if user and user['password'] == password:
-            session.clear()  # Clear existing session to avoid stale data
+        db = get_db()
+        user = db.execute('SELECT * FROM users WHERE username = ? AND password = ?', (request.form['username'], request.form['password'])).fetchone()
+        if user:
             session['username'] = user['username']
             session['role'] = user['role']
-            session['is_admin'] = user['role'] in ['owner', 'moder']
-            logger.debug(f"Login successful: {username}, Role: {user['role']}, Session Role: {session['role']}")
             return redirect('/')
-        logger.debug(f"Login failed: {username}")
-    return render_template('index.html', page='login')
+        return render_template('index.html', page='login', error='Неверный логин', users=get_users())
+    return render_template('index.html', page='login', users=get_users())
 
-
-@app.route('/auth/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        with sqlite3.connect(DB_PATH) as con:
-            cur = con.cursor()
-            cur.execute("INSERT OR IGNORE INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
-                        (username, email, password, 'user'))
-        return redirect('/auth/login')
-    return render_template('index.html', page='register')
-
+        db = get_db()
+        exists = db.execute('SELECT * FROM users WHERE username = ?', (request.form['username'],)).fetchone()
+        if exists:
+            return render_template('index.html', page='register', error='Пользователь уже есть', users=get_users())
+        db.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', (request.form['username'], request.form['password'], 'user'))
+        db.commit()
+        return redirect('/login')
+    return render_template('index.html', page='register', users=get_users())
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
 
-
 @app.route('/profile/<username>')
 def profile(username):
-    if 'username' not in session:
-        return redirect('/auth/login')
-    profile = get_user(username)
-    users = get_all_users()
-    return render_template('index.html', page='profile', profile=profile, users=users)
+    db = get_db()
+    profile = db.execute('SELECT username, role FROM users WHERE username = ?', (username,)).fetchone()
+    return render_template('index.html', page='profile', profile=profile, users=get_users())
 
+@app.route('/pastes')
+def pastes():
+    db = get_db()
+    pastes = db.execute('SELECT * FROM pastes ORDER BY id DESC').fetchall()
+    return render_template('index.html', page='pastes', pastes=pastes, users=get_users())
 
-@app.route('/grant/<username>', methods=['POST'])
-def grant(username):
-    if 'username' not in session or session.get('role') != 'owner':
-        return redirect('/')
-    role = request.args.get('role')
-    if role not in ['moder', 'owner']:
-        return redirect('/')
-    with sqlite3.connect(DB_PATH) as con:
-        con.execute("UPDATE users SET role=? WHERE username=?", (role, username))
-    return redirect(f'/profile/{username}')
+@app.route('/paste/<int:paste_id>')
+def paste_view(paste_id):
+    db = get_db()
+    paste = db.execute('SELECT * FROM pastes WHERE id = ?', (paste_id,)).fetchone()
+    if not paste:
+        abort(404)
+    return render_template('index.html', page='paste', paste=paste, users=get_users())
 
+@app.route('/create_paste', methods=['GET', 'POST'])
+def create_paste():
+    if request.method == 'POST':
+        db = get_db()
+        db.execute('INSERT INTO pastes (title, content, username) VALUES (?, ?, ?)', (request.form['title'], request.form['content'], session['username']))
+        db.commit()
+        return redirect('/pastes')
+    return render_template('index.html', page='create_paste', users=get_users())
 
-@app.route('/revoke/<username>', methods=['POST'])
-def revoke(username):
-    if 'username' not in session or session.get('role') != 'owner':
-        return redirect('/')
-    with sqlite3.connect(DB_PATH) as con:
-        con.execute("UPDATE users SET role='user' WHERE username=?", (username,))
-    return redirect(f'/profile/{username}')
+@app.route('/edit_paste/<int:paste_id>', methods=['GET', 'POST'])
+def edit_paste(paste_id):
+    db = get_db()
+    paste = db.execute('SELECT * FROM pastes WHERE id = ?', (paste_id,)).fetchone()
+    if not paste:
+        abort(404)
+    if paste['username'] != session['username'] and session.get('role') != 'owner':
+        abort(403)
+    if request.method == 'POST':
+        db.execute('UPDATE pastes SET title = ?, content = ? WHERE id = ?', (request.form['title'], request.form['content'], paste_id))
+        db.commit()
+        return redirect(f'/paste/{paste_id}')
+    return render_template('index.html', page='edit_paste', paste=paste, users=get_users())
 
+@app.route('/delete_paste/<int:paste_id>', methods=['POST'])
+def delete_paste(paste_id):
+    db = get_db()
+    paste = db.execute('SELECT * FROM pastes WHERE id = ?', (paste_id,)).fetchone()
+    if not paste:
+        abort(404)
+    if paste['username'] != session['username'] and session.get('role') != 'owner':
+        abort(403)
+    db.execute('DELETE FROM pastes WHERE id = ?', (paste_id,))
+    db.commit()
+    return redirect('/pastes')
 
-@app.route('/ban/<username>', methods=['POST'])
-def ban(username):
-    if 'username' not in session or session.get('role') != 'owner':
-        return redirect('/')
-    with sqlite3.connect(DB_PATH) as con:
-        con.execute("DELETE FROM users WHERE username=?", (username,))
-    return redirect('/')
-
-
-@app.route('/admin')
-def admin():
-    if 'username' not in session or session.get('role') != 'owner':
-        return redirect('/')
-    users = get_all_users()
-    return render_template('index.html', page='admin', users=users)
-
+def get_users():
+    return get_db().execute('SELECT username, role FROM users').fetchall()
 
 if __name__ == '__main__':
+    if not os.path.exists(DB_NAME):
+        conn = sqlite3.connect(DB_NAME)
+        conn.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT, role TEXT DEFAULT "user")')
+        conn.execute('CREATE TABLE chat (id INTEGER PRIMARY KEY, username TEXT, content TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        conn.execute('CREATE TABLE data (id INTEGER PRIMARY KEY, title TEXT, tag TEXT, content TEXT, username TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        conn.execute('CREATE TABLE news (id INTEGER PRIMARY KEY, title TEXT, body TEXT, username TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        conn.execute('CREATE TABLE pastes (id INTEGER PRIMARY KEY, title TEXT, content TEXT, username TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        conn.execute('INSERT INTO users (username, password, role) VALUES ("hepvov", "123", "owner")')
+        conn.commit()
+        conn.close()
     app.run(debug=True)

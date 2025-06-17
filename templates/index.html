@@ -1,167 +1,135 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru" class="bg-black text-gray-300 font-mono text-lg leading-snug">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Deaclouds</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dead Clouds</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans">
-  <div class="container mx-auto px-4 py-6 max-w-4xl">
-    <!-- Site Title -->
-    <header class="text-center mb-6">
-      <h1 class="text-4xl font-bold text-blue-400">Deaclouds</h1>
-    </header>
+<body class="min-h-screen">
+  <header class="text-center text-lg bg-zinc-950 border-b border-zinc-800 py-3">Dead Clouds</header>
 
-    <!-- Navigation -->
-    <nav class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gray-800 p-4 rounded-lg shadow">
-      {% if session.username %}
-        <div class="flex flex-wrap gap-4 mb-4 sm:mb-0">
-          <a href="/" class="text-blue-400 hover:underline">Главная</a>
-          <a href="/chat" class="text-blue-400 hover:underline">Чат</a>
-          <a href="/data" class="text-blue-400 hover:underline">Посты</a>
-          <a href="/news" class="text-blue-400 hover:underline">Новостник</a>
-          {% if session.role=='owner' %}
-            <a href="/admin" class="text-blue-400 hover:underline">Админка</a>
-          {% endif %}
-        </div>
-        <a href="/logout" class="text-red-400 hover:underline">Выйти ({{ session.username }})</a>
-      {% else %}
-        <div class="flex gap-4">
-          <a href="/auth/login" class="text-blue-400 hover:underline">Вход</a>
-          <a href="/auth/register" class="text-blue-400 hover:underline">Регистрация</a>
-        </div>
+  <nav class="flex flex-wrap justify-center bg-zinc-900 border-b border-zinc-800 text-xs">
+    {% if session.username %}
+      <a href="/" class="px-3 py-2 hover:bg-cyan-400 hover:text-black {% if page=='home' %}bg-cyan-400 text-black font-bold{% endif %}">Главная</a>
+      <a href="/chat" class="px-3 py-2 hover:bg-cyan-400 hover:text-black {% if page=='chat' %}bg-cyan-400 text-black font-bold{% endif %}">Чат</a>
+      <a href="/data" class="px-3 py-2 hover:bg-cyan-400 hover:text-black {% if page=='data' %}bg-cyan-400 text-black font-bold{% endif %}">Посты</a>
+      <a href="/news" class="px-3 py-2 hover:bg-cyan-400 hover:text-black {% if page=='news' %}bg-cyan-400 text-black font-bold{% endif %}">Новостник</a>
+      {% if session.role == 'owner' %}
+        <a href="/admin" class="px-3 py-2 hover:bg-cyan-400 hover:text-black {% if page=='admin' %}bg-cyan-400 text-black font-bold{% endif %}">Админка</a>
       {% endif %}
-    </nav>
+      <a href="/logout" class="px-3 py-2 hover:bg-red-600 hover:text-white">Выйти ({{ session.username }})</a>
+    {% else %}
+      <a href="/login" class="px-3 py-2 hover:bg-cyan-400 hover:text-black {% if page=='login' %}bg-cyan-400 text-black font-bold{% endif %}">Вход</a>
+      <a href="/register" class="px-3 py-2 hover:bg-cyan-400 hover:text-black {% if page=='register' %}bg-cyan-400 text-black font-bold{% endif %}">Регистрация</a>
+    {% endif %}
+  </nav>
 
-    <!-- Main Content -->
-    <main class="bg-gray-800 p-6 rounded-lg shadow">
+  <main class="flex flex-col md:flex-row p-4 gap-4 justify-center">
+    <section class="w-full max-w-3xl bg-zinc-950 border border-zinc-800 p-4">
       {% if page=='home' %}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Добро пожаловать, {{ session.username }}!</h1>
+        <h2 class="text-base mb-4">Добро пожаловать, {{ session.username }}</h2>
 
       {% elif page=='login' %}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Вход</h1>
-        <form method="POST" class="flex flex-col gap-4 max-w-md">
-          <input type="text" name="username" placeholder="Имя пользователя" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-          <input type="password" name="password" placeholder="Пароль" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-          <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Войти</button>
+        <h2 class="text-base mb-3">Вход</h2>
+        <form method="POST" action="/login" class="space-y-2">
+          <input name="username" placeholder="Логин" required class="w-full p-1 bg-black border border-zinc-700 text-white">
+          <input type="password" name="password" placeholder="Пароль" required class="w-full p-1 bg-black border border-zinc-700 text-white">
+          <button class="w-full bg-cyan-400 text-black py-1 font-bold">Войти</button>
         </form>
 
       {% elif page=='register' %}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Регистрация</h1>
-        <form method="POST" class="flex flex-col gap-4 max-w-md">
-          <input type="text" name="username" placeholder="Имя пользователя" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-          <input type="email" name="email" placeholder="Email" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-          <input type="password" name="password" placeholder="Пароль" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-          <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Зарегистрироваться</button>
+        <h2 class="text-base mb-3">Регистрация</h2>
+        <form method="POST" action="/register" class="space-y-2">
+          <input name="username" placeholder="Логин" required class="w-full p-1 bg-black border border-zinc-700 text-white">
+          <input type="password" name="password" placeholder="Пароль" required class="w-full p-1 bg-black border border-zinc-700 text-white">
+          <button class="w-full bg-cyan-400 text-black py-1 font-bold">Зарегистрироваться</button>
         </form>
 
       {% elif page=='chat' %}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Чат</h1>
-        <form method="POST" class="flex flex-col sm:flex-row gap-4 mb-6">
-          <input type="text" name="content" placeholder="Сообщение" class="flex-grow p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-          <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Отправить</button>
+        <h2 class="text-base mb-3">Чат</h2>
+        <form method="POST" action="/chat" class="mb-4 space-y-2">
+          <textarea name="content" placeholder="Сообщение..." required class="w-full p-1 bg-black border border-zinc-700 text-white"></textarea>
+          <button class="w-full bg-cyan-400 text-black py-1 font-bold">Отправить</button>
         </form>
-        <div class="space-y-4">
-          {% for m in chat %}
-            <div class="border border-gray-600 p-4 rounded bg-gray-700">
-              <p class="font-semibold text-gray-100">{{ m.username }}: {{ m.content }}</p>
-              <p class="text-sm text-gray-400">{{ m.created_at }}</p>
-            </div>
-          {% endfor %}
-        </div>
+        {% for m in chat %}
+          <div class="border-b border-zinc-800 py-2">
+            <a href="/profile/{{ m.username }}" class="text-cyan-400 hover:underline">{{ m.username }}</a>: {{ m.content }}<br>
+            <span class="text-xs text-gray-600">{{ m.created_at }}</span>
+          </div>
+        {% endfor %}
 
       {% elif page=='data' %}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Посты</h1>
-        <form method="POST" class="flex flex-col gap-4 mb-6 max-w-md">
-          <input type="text" name="title" placeholder="Заголовок" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-          <input type="text" name="tag" placeholder="Тег" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-          <textarea name="content" placeholder="Содержание" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required></textarea>
-          <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Создать</button>
+        <h2 class="text-base mb-3">Посты</h2>
+        <form method="POST" action="/data" class="mb-4 space-y-2">
+          <input name="title" placeholder="Заголовок" required class="w-full p-1 bg-black border border-zinc-700 text-white">
+          <input name="tag" placeholder="Тег" class="w-full p-1 bg-black border border-zinc-700 text-white">
+          <textarea name="content" placeholder="Текст..." required class="w-full p-1 bg-black border border-zinc-700 text-white"></textarea>
+          <button class="w-full bg-cyan-400 text-black py-1 font-bold">Создать</button>
         </form>
-        <div class="space-y-4">
-          {% for post in data %}
-            <div class="border border-gray-600 p-4 rounded bg-gray-700">
-              <h2 class="text-xl font-semibold text-gray-100">{{ post.title }} [{{ post.tag }}]</h2>
-              <p>{{ post.content }}</p>
-              <p class="text-sm text-gray-400">{{ post.created_at }}</p>
-            </div>
-          {% endfor %}
-        </div>
+        {% for post in data %}
+          <div class="border-b border-zinc-800 py-2">
+            <strong>{{ post.title }}</strong> [{{ post.tag }}]<br>
+            {{ post.content }}<br>
+            <span class="text-xs text-gray-600">{{ post.created_at }}</span>
+          </div>
+        {% endfor %}
 
       {% elif page=='news' %}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Новостник</h1>
-        <p class="text-gray-400 mb-4">Ваша роль: {{ role }}</p>
-        {% if role == 'owner' %}
-          <form method="POST" class="flex flex-col gap-4 mb-6 max-w-md">
-            <input type="text" name="title" placeholder="Заголовок новости" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required>
-            <textarea name="body" placeholder="Текст новости" rows="5" class="p-2 border border-gray-600 rounded bg-gray-700 text-gray-100" required></textarea>
-            <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Опубликовать новость</button>
-          </form>
-        {% else %}
-          <p class="text-red-400 mb-6">Только пользователи с ролью 'owner' могут публиковать новости.</p>
+        <h2 class="text-base mb-3">Новостник</h2>
+        {% if session.role == 'owner' %}
+        <form method="POST" action="/news" class="mb-4 space-y-2">
+          <input name="title" placeholder="Заголовок" required class="w-full p-1 bg-black border border-zinc-700 text-white">
+          <textarea name="body" placeholder="Текст новости..." required class="w-full p-1 bg-black border border-zinc-700 text-white"></textarea>
+          <button class="w-full bg-cyan-400 text-black py-1 font-bold">Опубликовать</button>
+        </form>
         {% endif %}
-        <div class="space-y-4">
-          {% for item in news %}
-            <div class="border border-gray-600 p-4 rounded bg-gray-700">
-              <h2 class="text-xl font-semibold text-gray-100">{{ item.title }} ({{ item.created_at }}, {{ item.username }})</h2>
-              <p>{{ item.body }}</p>
-            </div>
-          {% endfor %}
-        </div>
-
-      {% elif page=='profile' %}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Профиль: {{ profile.username }}</h1>
-        <p><strong>Email:</strong> {% if session.role=='owner' or session.username==profile.username %}{{ profile.email }}{% else %}скрыт{% endif %}</p>
-        <p><strong>Роль:</strong> [{{ profile.role }}]</p>
-        {% if session.role=='owner' and session.username!=profile.username %}
-          <div class="flex flex-col sm:flex-row gap-4 mt-4">
-            <form method="POST" action="/grant/{{ profile.username }}?role=moder">
-              <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Сделать модератором</button>
-            </form>
-            <form method="POST" action="/grant/{{ profile.username }}?role=owner">
-              <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Сделать владельцем</button>
-            </form>
-            <form method="POST" action="/revoke/{{ profile.username }}">
-              <button type="submit" class="bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600">Снять права</button>
-            </form>
-            <form method="POST" action="/ban/{{ profile.username }}">
-              <button type="submit" class="bg-red-500 text-white p-2 rounded hover:bg-red-600">Забанить</button>
-            </form>
+        {% for item in news %}
+          <div class="border-b border-zinc-800 py-2">
+            <strong>{{ item.title }}</strong><br>
+            {{ item.body }}<br>
+            <span class="text-xs text-gray-600">{{ item.created_at }} от <a href="/profile/{{ item.username }}" class="text-cyan-400 hover:underline">{{ item.username }}</a></span>
           </div>
-        {% endif %}
+        {% endfor %}
 
       {% elif page=='admin' %}
-        <h1 class="text-2xl font-bold mb-4 text-gray-100">Админка</h1>
-        <div class="space-y-4">
+        <h2 class="text-base mb-3">Админка</h2>
+        <ul class="space-y-2">
           {% for u in users %}
-            <div class="border border-gray-600 p-4 rounded bg-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-              <p>{{ u.username }} [{{ u.role }}]</p>
-              {% if u.username!=session.username %}
-                <div class="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
-                  <a href="/grant/{{ u.username }}?role=moder" class="text-green-400 hover:underline">Модер</a>
-                  <a href="/grant/{{ u.username }}?role=owner" class="text-green-400 hover:underline">Владелец</a>
-                  <a href="/revoke/{{ u.username }}" class="text-yellow-400 hover:underline">Снять</a>
-                  <a href="/ban/{{ u.username }}" class="text-red-400 hover:underline">Бан</a>
-                </div>
-              {% endif %}
-            </div>
+          <li class="border-b border-zinc-800 pb-2">
+            <a href="/profile/{{ u.username }}" class="text-cyan-400 hover:underline">{{ u.username }}</a> <span class="text-gray-500">[{{ u.role }}]</span>
+            {% if u.username != session.username %}
+              <form method="POST" action="/grant/{{ u.username }}?role=moder" class="inline"><button class="bg-zinc-800 text-white px-2 py-1 text-xs">Модер</button></form>
+              <form method="POST" action="/grant/{{ u.username }}?role=owner" class="inline"><button class="bg-zinc-800 text-white px-2 py-1 text-xs">Владелец</button></form>
+              <form method="POST" action="/revoke/{{ u.username }}" class="inline"><button class="bg-zinc-800 text-white px-2 py-1 text-xs">Снять</button></form>
+              <form method="POST" action="/ban/{{ u.username }}" class="inline"><button class="bg-red-600 text-white px-2 py-1 text-xs">Бан</button></form>
+            {% endif %}
+          </li>
           {% endfor %}
-        </div>
-      {% endif %}
-    </main>
+        </ul>
 
-    <!-- Users List -->
+      {% elif page=='profile' %}
+        <h2 class="text-base mb-2">Профиль: {{ profile.username }}</h2>
+        <p>Роль: <span class="text-gray-500">[{{ profile.role }}]</span></p>
+        {% if session.role == 'owner' and profile.username != session.username %}
+          <form method="POST" action="/grant/{{ profile.username }}?role=moder"><button class="bg-zinc-800 px-2 py-1 mt-2 text-white text-xs">Модер</button></form>
+          <form method="POST" action="/grant/{{ profile.username }}?role=owner"><button class="bg-zinc-800 px-2 py-1 mt-2 text-white text-xs">Владелец</button></form>
+          <form method="POST" action="/revoke/{{ profile.username }}"><button class="bg-zinc-800 px-2 py-1 mt-2 text-white text-xs">Снять</button></form>
+          <form method="POST" action="/ban/{{ profile.username }}"><button class="bg-red-600 px-2 py-1 mt-2 text-white text-xs">Бан</button></form>
+        {% endif %}
+      {% endif %}
+    </section>
+
     {% if session.username %}
-      <aside class="mt-6 bg-gray-800 p-4 rounded-lg shadow">
-        <h2 class="text-xl font-bold mb-4 text-gray-100">Пользователи</h2>
-        <div class="space-y-2">
-          {% for u in users %}
-            <a href="/profile/{{ u.username }}" class="block text-blue-400 hover:underline">{{ u.username }} [{{ u.role }}]</a>
-          {% endfor %}
-        </div>
-      </aside>
+    <aside class="bg-zinc-950 border border-zinc-800 p-4 w-full md:w-64 h-fit">
+      <h3 class="font-bold mb-2 border-b border-zinc-800">Пользователи</h3>
+      <ul class="space-y-1 text-sm">
+        {% for u in users %}
+          <li><a href="/profile/{{ u.username }}" class="text-cyan-400 hover:underline">{{ u.username }}</a> <span class="text-gray-500">[{{ u.role }}]</span></li>
+        {% endfor %}
+      </ul>
+    </aside>
     {% endif %}
-  </div>
+  </main>
 </body>
 </html>
